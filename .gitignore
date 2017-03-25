@@ -56,3 +56,13 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# glade
+*.glade~
+*.glade#
+
+# idea
+.idea/
+.idea
+
+
