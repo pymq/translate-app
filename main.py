@@ -7,22 +7,35 @@ from translate import Translator
 
 class Handler:
     def __init__(self):
+        self.lang = 'en-ru'
         return
 
     def on_entry_enter_press_event(self, *args): #TODO: рассмотреть вариант поиска по Ctrl + space
         input_text = entry.get_text()
-        # entry.set_text(str(switcher.get_active()))
         # translate
+        #TODO: автоматическое распознавание языка перевода
+        #TODO: unit-тесты
         #TODO: вывод перевода по мере загрузки
         tr = Translator()
-        buffer1.set_text(tr.translate_google(input_text) + '\n\n\n\nGoogle Translate')
-        buffer2.set_text(tr.translate_yandex(input_text) + '\n\n\n\nYandex Translate')
-        buffer3.set_text(tr.dictionary_yandex(input_text) + '\n\n\n\nYandex Dictionary')
+        # when ru-en it throws HTTP 403 err
+        if self.lang == 'ru-en':
+            buffer1.set_text('')
+        elif self.lang == 'en-ru':
+            buffer1.set_text(tr.translate_google(input_text,self.lang) + '\n\n\n\nGoogle Translate')
+
+        buffer2.set_text(tr.translate_yandex(input_text, self.lang) + '\n\n\n\nYandex Translate')
+        buffer3.set_text(tr.dictionary_yandex(input_text, self.lang) + '\n\n\n\nYandex Dictionary')
 
     def onWindowDestroy(self, *args):
         gtk.main_quit()
 
     #TODO: switcher
+    def on_switch_state_set(self,switch,state):
+        if state:
+            self.lang = 'ru-en'
+        else:
+            self.lang = 'en-ru'
+
 
 builder = gtk.Builder()
 builder.add_from_file("mainwindow.glade")

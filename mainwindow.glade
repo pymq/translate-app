@@ -47,6 +47,7 @@
               <object class="GtkSwitch" id="switch">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <signal name="state-set" handler="on_switch_state_set" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">2</property>

@@ -13,20 +13,21 @@ class Translator:
         self.ya_dictionary_token = config['DEFAULT']["ya_dictionary_token"]
         return
 
-    def translate_google(self, text, dest='ru'):
+    def translate_google(self, text, lang='en-ru'):
+        src,dest = lang.split('-')
         translator = gtr()
-        res = translator.translate(text, dest=dest)
+        res = translator.translate(text, dest=dest, src=src)
         return res.text
 
     #TODO: summary
-    def translate_yandex(self, text, dest='en-ru'):
+    def translate_yandex(self, text, lang='en-ru'):
         url = r'https://translate.yandex.net/api/v1.5/tr.json/translate'
-        payload = dict(key=self.ya_translate_token, text=text, lang=dest)
+        payload = dict(key=self.ya_translate_token, text=text, lang=lang)
         return dict(requests.get(url, payload).json())['text'][0]
 
-    def dictionary_yandex(self, text, dest='en-ru'):
+    def dictionary_yandex(self, text, lang='en-ru'):
         url = r'https://dictionary.yandex.net/api/v1/dicservice.json/lookup'
-        payload = dict(key=self.ya_dictionary_token, text=text, lang=dest, ui='ru')
+        payload = dict(key=self.ya_dictionary_token, text=text, lang=lang, ui='ru')
         api_answer = dict(requests.get(url, payload).json())['def']
         result = ''
         for pos in api_answer:
