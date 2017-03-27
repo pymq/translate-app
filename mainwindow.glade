@@ -21,14 +21,7 @@
               <object class="GtkEntry" id="entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="margin_left">20</property>
-                <property name="margin_right">20</property>
-                <property name="margin_top">2</property>
-                <property name="activates_default">True</property>
-                <signal name="grab-focus" handler="on_entry_grab_focus" swapped="no"/>
-                <signal name="key-press-event" handler="on_entry_key_press_event" swapped="no"/>
+                <signal name="activate" handler="on_entry_enter_press_event" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -37,12 +30,13 @@
             </child>
             <child>
               <object class="GtkButton" id="button">
-                <property name="label" translatable="yes">button</property>
+                <property name="label" translatable="yes">Translate</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="has_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="margin_left">15</property>
+                <property name="margin_left">4</property>
+                <property name="margin_right">4</property>
+                <property name="relief">half</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -53,7 +47,6 @@
               <object class="GtkSwitch" id="switch">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="margin_left">70</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -72,7 +65,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkTextView" id="textview4">
+              <object class="GtkTextView" id="textview1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="margin_right">5</property>
@@ -87,7 +80,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTextView" id="textview5">
+              <object class="GtkTextView" id="textview2">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="margin_left">5</property>
@@ -102,7 +95,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTextView" id="textview6">
+              <object class="GtkTextView" id="textview3">
                 <property name="height_request">300</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
