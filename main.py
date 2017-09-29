@@ -1,6 +1,6 @@
-#!/home/max/DesktopTranslator/bin/python3
-import os
+#!/usr/bin/python3
 
+import os
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
@@ -105,6 +105,28 @@ buffer3 = gtk.TextBuffer()
 textview1.set_buffer(buffer1)
 textview2.set_buffer(buffer2)
 textview3.set_buffer(buffer3)
+
+# gi.require_version('Keybinder', '3.0')
+# from gi.repository import Gdk,Keybinder
+# def callback(keystr, user_data):
+#     print ("Handling", user_data)
+#     print ("Event time:", Keybinder.get_current_event_time())
+#     gtk.main_quit()
+# keystr = "<Ctrl><Alt>M"
+# Keybinder.init()
+# Keybinder.bind(keystr, callback)
+# print ("Press", keystr, "to handle keybinding and quit")
+
+
+# def on_accel_pressed(self, *args):
+#     print('it works')
+#
+# from gi.repository import Gdk
+# print(Gdk.keyval_from_name('ctrl')) # 16777215
+# accel = gtk.AccelGroup()
+# accel.connect(Gdk.keyval_from_name('O'), Gdk.ModifierType.CONTROL_MASK, 0, on_accel_pressed)
+# window.add_accel_group(accel)
+
 
 window.show_all()
 gtk.main()
