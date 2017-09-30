@@ -62,7 +62,6 @@ target/
 *.glade#
 
 # idea
-.idea/
 .idea
 
 config.ini

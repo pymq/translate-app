@@ -1,7 +1,16 @@
-h2==2.6.1
-hyperframe==3.2.0
-urllib3
-requests
+appdirs==1.4.3
+certifi==2017.7.27.1
+chardet==3.0.4
 configparser==3.5.0
-# pygobject==3.20.0
-# googletrans
+googletrans==2.1.4
+h2==3.0.1
+hpack==3.0.0
+hyperframe==5.1.0
+idna==2.6
+packaging==16.8
+pyparsing==2.2.0
+PyQt5==5.9
+requests==2.18.4
+sip==4.19.3
+six==1.11.0
+urllib3==1.22
