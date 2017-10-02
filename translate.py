@@ -49,4 +49,4 @@ class Translator:
                 if len(en_syn_list) != 0:
                     result = result + '\n\t   ' + '(' + ', '.join(en_syn_list) + ')'
             result = result + '\n\n'
-        return result
+        return result.strip()
