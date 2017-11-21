@@ -1,27 +1,31 @@
 import os
+import sys
+
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, \
     QWidget, QMessageBox, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu
 from PyQt5.QtGui import QIcon, QKeySequence, QKeyEvent
 from PyQt5.QtCore import QCoreApplication, Qt, QSize
 
-import sys
 from translate import Translator
 
 
-class App(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = 'Translator'
         self.width = 920
         self.height = 620
         self.tr = Translator()
+        self.historyFileName = "history.txt"
         self.curr_pos = 0
         self.history = []
         self.history_uploaded = 0
         self.read_history(10)
-        self.initUI()
+        self.threads = [None for _ in range(5)]
+        self.init_UI()
 
-    def initUI(self):
+    def init_UI(self):
         # self.setWindowIcon(QIcon('icon.png'))
         self.resize(self.width, self.height)
         self.setWindowTitle(self.title)
@@ -35,21 +39,24 @@ class App(QMainWindow):
         self.inputEdit = QLineEdit()
         self.submitButton = QPushButton('&Translate')
         self.submitButton.setMaximumSize(QSize(100, 40))
-        self.output1TextEdit = QTextEdit()
-        self.output1TextEdit.setTabStopWidth(tabstop)
-        self.output2TextEdit = QTextEdit()
-        self.output2TextEdit.setTabStopWidth(tabstop)
-        self.output3TextEdit = QTextEdit()
-        self.output3TextEdit.setTabStopWidth(tabstop)
-        self.output4TextEdit = QTextEdit()
-        self.output4TextEdit.setTabStopWidth(tabstop)
+        self.text_edit_1 = QTextEdit()
+        self.text_edit_1.setTabStopWidth(tabstop)
+        self.text_edit_2 = QTextEdit()
+        self.text_edit_2.setTabStopWidth(tabstop)
+        self.text_edit_3 = QTextEdit()
+        self.text_edit_3.setTabStopWidth(tabstop)
+        self.text_edit_4 = QTextEdit()
+        self.text_edit_4.setTabStopWidth(tabstop)
+        self.text_edit_5 = QTextEdit()
+        self.text_edit_5.setTabStopWidth(tabstop)
 
         grid.addWidget(self.inputEdit, 1, 0)
         grid.addWidget(self.submitButton, 1, 1)
-        grid.addWidget(self.output1TextEdit, 2, 0)
-        grid.addWidget(self.output2TextEdit, 3, 0)
-        grid.addWidget(self.output3TextEdit, 2, 1, 2, 1)
-        grid.addWidget(self.output4TextEdit, 2, 2, 2, 1)
+        grid.addWidget(self.text_edit_1, 2, 0)
+        grid.addWidget(self.text_edit_2, 3, 0)
+        grid.addWidget(self.text_edit_3, 2, 1, 2, 1)
+        grid.addWidget(self.text_edit_4, 2, 2)
+        grid.addWidget(self.text_edit_5, 3, 2)
 
         mainWidget.setLayout(grid)
         self.setCentralWidget(mainWidget)
@@ -119,7 +126,6 @@ class App(QMainWindow):
         self.curr_pos -= 1
         self.inputEdit.setText(self.history[self.curr_pos])
         self.inputEdit.selectAll()
-        pass
 
     def navigate_history_forward(self):
         # key up is 16777235
@@ -128,7 +134,6 @@ class App(QMainWindow):
         self.curr_pos += 1
         self.inputEdit.setText(self.history[self.curr_pos])
         self.inputEdit.selectAll()
-        pass
 
     def keyPressEvent(self, QKeyEvent):
         if QKeyEvent.key() == Qt.Key_Up:
@@ -137,51 +142,117 @@ class App(QMainWindow):
             self.navigate_history_backward()
 
     def read_history(self, n):
-        fname = "history.txt"
-        if not os.path.exists(fname):
+        if not os.path.exists(self.historyFileName):
             return
-        with open(fname, "r") as f:
-            f.seek(0, 2)
-            fsize = f.tell()
-            f.seek(max(fsize - 2048, 0), 0)
-            lines = f.readlines()
+        with open(self.historyFileName, "r") as f:
+            lines_list = list(map(str.strip, f.readlines()[-n:]))
 
-        lines_list = [line.rstrip() for line in lines[-n:]]
         self.history.extend(lines_list)
         self.history_uploaded = len(lines_list)
-        # делаем на 1 больше максимума, чтобы при нажатии вниз попадать на последнюю запись
         self.curr_pos = len(self.history)
 
     def write_history(self):
-        fname = "history.txt"
         isnew = True
-        if os.path.exists(fname):
+        if os.path.exists(self.historyFileName):
             isnew = False
-        with open(fname,'a') as f:
+        with open(self.historyFileName, 'a') as f:
             if not isnew:
                 f.write('\n')
-            f.write('\n'.join(self.history[self.history_uploaded -1:]))
+            f.write('\n'.join(self.history[self.history_uploaded:]))
 
     def translate(self):
-        input_text = self.inputEdit.text()
-        if input_text.isspace():
+        input_text = self.inputEdit.text().strip().lower()
+        if input_text == '':
+            self.inputEdit.setText('')
             return
         en_alp = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
                   'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
-        if input_text.lower()[0] in en_alp or input_text.lower().strip()[1] in en_alp:
+        if input_text.lower()[0] in en_alp or input_text[1] in en_alp:
             lang = 'en-ru'
-            self.output1TextEdit.setText(self.tr.translate_google(input_text, lang) + '\n'*4 + 'Google Translate')
         else:
             lang = 'ru-en'
-            self.output1TextEdit.setText('')
 
-        self.output2TextEdit.setText(self.tr.translate_yandex(input_text, lang) + '\n'*4 + 'Yandex Translate')
-        self.output3TextEdit.setText(self.tr.dictionary_yandex(input_text, lang) + '\n'*4 + 'Yandex Dictionary')
+        for i in range(5):
+            if self.threads[i]:
+                self.threads[i].terminate()
+                self.threads[i] = None
+        self.workers = [None for _ in range(5)]
+
+        if lang is 'en-ru':
+            self.threads[0] = QThread()
+            self.workers[0] = Worker(input_text, lang, self.tr)
+            self.workers[0].result[str].connect(self.TE_1_set_text)
+            self.workers[0].moveToThread(self.threads[0])
+            self.threads[0].started.connect(self.workers[0].translate_google)
+            self.threads[0].finished.connect(self.threads[0].exit)
+            self.threads[0].finished.connect(self.threads[0].quit)
+            self.threads[0].start()
+
+            self.threads[3] = QThread()
+            self.workers[3] = Worker(input_text, lang, self.tr)
+            self.workers[3].result[str].connect(self.TE_4_set_text)
+            self.workers[3].moveToThread(self.threads[3])
+            self.threads[3].started.connect(self.workers[3].synonym)
+            self.threads[3].finished.connect(self.threads[3].exit)
+            self.threads[3].finished.connect(self.threads[3].quit)
+            self.threads[3].start()
+
+            self.threads[4] = QThread()
+            self.workers[4] = Worker(input_text, lang, self.tr)
+            self.workers[4].result[str].connect(self.TE_5_set_text)
+            self.workers[4].moveToThread(self.threads[4])
+            self.threads[4].started.connect(self.workers[4].definition)
+            self.threads[4].finished.connect(self.threads[4].exit)
+            self.threads[4].finished.connect(self.threads[4].quit)
+            self.threads[4].start()
+
+        elif lang is 'ru-en':
+            self.text_edit_1.setText('')
+            self.text_edit_4.setText('')
+            self.text_edit_5.setText('')
+
+        self.threads[1] = QThread()
+        self.workers[1] = Worker(input_text, lang, self.tr)
+        self.workers[1].result[str].connect(self.TE_2_set_text)
+        self.workers[1].moveToThread(self.threads[1])
+        self.threads[1].started.connect(self.workers[1].translate_yandex)
+        self.threads[1].finished.connect(self.threads[1].exit)
+        self.threads[1].finished.connect(self.threads[1].quit)
+        self.threads[1].start()
+
+        self.threads[2] = QThread()
+        self.workers[2] = Worker(input_text, lang, self.tr)
+        self.workers[2].result[str].connect(self.TE_3_set_text)
+        self.workers[2].moveToThread(self.threads[2])
+        self.threads[2].started.connect(self.workers[2].dictionary_yandex)
+        self.threads[2].finished.connect(self.threads[2].exit)
+        self.threads[2].finished.connect(self.threads[2].quit)
+        self.threads[2].start()
 
         self.inputEdit.selectAll()
         self.history.append(input_text)
         self.curr_pos = len(self.history) - 1
+
+    @pyqtSlot(str)
+    def TE_1_set_text(self, s):
+        self.text_edit_1.setText('Google Translate\n\n' + s)
+
+    @pyqtSlot(str)
+    def TE_2_set_text(self, s):
+        self.text_edit_2.setText('Yandex Translate\n\n' + s)
+
+    @pyqtSlot(str)
+    def TE_3_set_text(self, s):
+        self.text_edit_3.setText('Yandex Dictionary\n\n' + s)
+
+    @pyqtSlot(str)
+    def TE_4_set_text(self, s):
+        self.text_edit_4.setText(s)
+
+    @pyqtSlot(str)
+    def TE_5_set_text(self, s):
+        self.text_edit_5.setText(s)
 
     def closeEvent(self, QCloseEvent):
         if len(self.history) == 0 or len(self.history) == self.history_uploaded:
@@ -198,7 +269,37 @@ class App(QMainWindow):
         self.move(qr.topLeft())
 
 
+class Worker(QObject):
+    result = pyqtSignal(str)
+
+    def __init__(self, input_text, lang, translator):
+        self.tr = translator
+        self.lang = lang
+        self.input_text = input_text
+        super().__init__()
+
+    def translate_google(self):
+        output = self.tr.translate_google(self.input_text, self.lang)
+        self.result.emit(output)
+
+    def synonym(self):
+        output = self.tr.synonym(self.input_text)
+        self.result.emit(output)
+
+    def definition(self):
+        output = self.tr.definition(self.input_text)
+        self.result.emit(output)
+
+    def translate_yandex(self):
+        output = self.tr.translate_yandex(self.input_text, self.lang)
+        self.result.emit(output)
+
+    def dictionary_yandex(self):
+        output = self.tr.dictionary_yandex(self.input_text, self.lang)
+        self.result.emit(output)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = App()
+    ex = MainWindow()
     sys.exit(app.exec_())
