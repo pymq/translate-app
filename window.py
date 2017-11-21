@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon, QKeySequence, QKeyEvent
 from PyQt5.QtCore import QCoreApplication, Qt, QSize
 
 from translate import Translator
+from history import History
 
 
 class MainWindow(QMainWindow):
@@ -17,11 +18,12 @@ class MainWindow(QMainWindow):
         self.width = 920
         self.height = 620
         self.tr = Translator()
-        self.historyFileName = "history.txt"
-        self.curr_pos = 0
-        self.history = []
-        self.history_uploaded = 0
-        self.read_history(10)
+        # self.historyFileName = "history.txt"
+        # self.curr_pos = 0
+        # self.history = []
+        # self.history_uploaded = 0
+        # self.read_history(10)
+        self.history = History("history.txt", 10)
         self.threads = [None for _ in range(5)]
         self.init_UI()
 
@@ -121,18 +123,14 @@ class MainWindow(QMainWindow):
 
     def navigate_history_backward(self):
         # key down is 16777237
-        if self.curr_pos <= 0:
-            return
-        self.curr_pos -= 1
-        self.inputEdit.setText(self.history[self.curr_pos])
+        self.history.navigate_back()
+        self.inputEdit.setText(self.history.current_word)
         self.inputEdit.selectAll()
 
     def navigate_history_forward(self):
         # key up is 16777235
-        if self.curr_pos >= (len(self.history) - 1):
-            return
-        self.curr_pos += 1
-        self.inputEdit.setText(self.history[self.curr_pos])
+        self.history.navigate_forward()
+        self.inputEdit.setText(self.history.current_word)
         self.inputEdit.selectAll()
 
     def keyPressEvent(self, QKeyEvent):
@@ -141,24 +139,6 @@ class MainWindow(QMainWindow):
         if QKeyEvent.key() == Qt.Key_Down:
             self.navigate_history_backward()
 
-    def read_history(self, n):
-        if not os.path.exists(self.historyFileName):
-            return
-        with open(self.historyFileName, "r") as f:
-            lines_list = list(map(str.strip, f.readlines()[-n:]))
-
-        self.history.extend(lines_list)
-        self.history_uploaded = len(lines_list)
-        self.curr_pos = len(self.history)
-
-    def write_history(self):
-        isnew = True
-        if os.path.exists(self.historyFileName):
-            isnew = False
-        with open(self.historyFileName, 'a') as f:
-            if not isnew:
-                f.write('\n')
-            f.write('\n'.join(self.history[self.history_uploaded:]))
 
     def translate(self):
         input_text = self.inputEdit.text().strip().lower()
@@ -232,7 +212,6 @@ class MainWindow(QMainWindow):
 
         self.inputEdit.selectAll()
         self.history.append(input_text)
-        self.curr_pos = len(self.history) - 1
 
     @pyqtSlot(str)
     def TE_1_set_text(self, s):
@@ -255,11 +234,7 @@ class MainWindow(QMainWindow):
         self.text_edit_5.setText(s)
 
     def closeEvent(self, QCloseEvent):
-        if len(self.history) == 0 or len(self.history) == self.history_uploaded:
-            super().closeEvent(QCloseEvent)
-            return
-
-        self.write_history()
+        self.history.upload_history()
         super().closeEvent(QCloseEvent)
 
     def center(self):

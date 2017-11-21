@@ -16,7 +16,8 @@ class Translator:
         # self.abbyy_token = ''
         # self.abbyy_get_token(self.abbyy_key)
 
-    def translate_google(self, text, lang='en-ru'):
+    @staticmethod
+    def translate_google(text, lang='en-ru'):
         src, dest = lang.split('-')
         translator = gtr()
         res = translator.translate(text, dest=dest, src=src)
@@ -46,7 +47,8 @@ class Translator:
         response = requests.post(url, headers=headers)
         self.abbyy_token = response.text
 
-    def synonym(self, text):
+    @staticmethod
+    def synonym(text):
         # do not support russian
         response = voc.synonym(text)
         if not response or response == '[]':
@@ -60,7 +62,8 @@ class Translator:
             i += 1
         return output
 
-    def definition(self, text):
+    @staticmethod
+    def definition(text):
         # do not support russian
         response = voc.meaning(text)
         if not response or response == '[]':
