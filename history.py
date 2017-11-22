@@ -22,6 +22,8 @@ class History(list):
 
     @property
     def current_word(self) -> str:
+        if self._history_uploaded is 0:
+            return ''
         return self[self._curr_pos]
 
     def _write_history(self):

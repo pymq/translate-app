@@ -1,6 +1,7 @@
 import os
 import sys
 
+import requests
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, \
     QWidget, QMessageBox, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu
@@ -18,11 +19,6 @@ class MainWindow(QMainWindow):
         self.width = 920
         self.height = 620
         self.tr = Translator()
-        # self.historyFileName = "history.txt"
-        # self.curr_pos = 0
-        # self.history = []
-        # self.history_uploaded = 0
-        # self.read_history(10)
         self.history = History("history.txt", 10)
         self.threads = [None for _ in range(5)]
         self.init_UI()
@@ -254,23 +250,43 @@ class Worker(QObject):
         super().__init__()
 
     def translate_google(self):
-        output = self.tr.translate_google(self.input_text, self.lang)
+        try:
+            output = self.tr.translate_google(self.input_text, self.lang)
+        except requests.exceptions.ConnectionError:
+            self.result.emit("Network error")
+            return
         self.result.emit(output)
 
     def synonym(self):
-        output = self.tr.synonym(self.input_text)
+        try:
+            output = self.tr.synonym(self.input_text)
+        except requests.exceptions.ConnectionError:
+            self.result.emit("Network error")
+            return
         self.result.emit(output)
 
     def definition(self):
-        output = self.tr.definition(self.input_text)
+        try:
+            output = self.tr.definition(self.input_text)
+        except requests.exceptions.ConnectionError:
+            self.result.emit("Network error")
+            return
         self.result.emit(output)
 
     def translate_yandex(self):
-        output = self.tr.translate_yandex(self.input_text, self.lang)
+        try:
+            output = self.tr.translate_yandex(self.input_text, self.lang)
+        except requests.exceptions.ConnectionError:
+            self.result.emit("Network error")
+            return
         self.result.emit(output)
 
     def dictionary_yandex(self):
-        output = self.tr.dictionary_yandex(self.input_text, self.lang)
+        try:
+            output = self.tr.dictionary_yandex(self.input_text, self.lang)
+        except requests.exceptions.ConnectionError:
+            self.result.emit("Network error")
+            return
         self.result.emit(output)
 
 
