@@ -149,62 +149,37 @@ class MainWindow(QMainWindow):
         else:
             lang = 'ru-en'
 
-        for i in range(5):
-            if self.threads[i]:
-                self.threads[i].terminate()
-                self.threads[i] = None
-        self.workers = [None for _ in range(5)]
-
         if lang is 'en-ru':
-            self.threads[0] = QThread()
-            self.workers[0] = Worker(input_text, lang, self.tr)
-            self.workers[0].result[str].connect(self.TE_1_set_text)
-            self.workers[0].moveToThread(self.threads[0])
-            self.threads[0].started.connect(self.workers[0].translate_google)
-            self.threads[0].finished.connect(self.threads[0].exit)
-            self.threads[0].finished.connect(self.threads[0].quit)
+            self.threads[0] = MyThread(input_text, lang, self.tr.translate_google)
+            self.threads[0].result.connect(self.TE_1_set_text)
             self.threads[0].start()
+            self.threads[0].finished.connect(self.threads[0].exit)
 
-            self.threads[3] = QThread()
-            self.workers[3] = Worker(input_text, 'en-en', self.tr)
-            self.workers[3].result[str].connect(self.TE_4_set_text)
-            self.workers[3].moveToThread(self.threads[3])
-            self.threads[3].started.connect(self.workers[3].synonym)
-            self.threads[3].finished.connect(self.threads[3].exit)
-            self.threads[3].finished.connect(self.threads[3].quit)
+            self.threads[3] = MyThread(input_text, 'en-en', self.tr.synonym)
+            self.threads[3].result.connect(self.TE_4_set_text)
             self.threads[3].start()
+            self.threads[3].finished.connect(self.threads[3].exit)
 
-            self.threads[4] = QThread()
-            self.workers[4] = Worker(input_text, 'en-en', self.tr)
-            self.workers[4].result[str].connect(self.TE_5_set_text)
-            self.workers[4].moveToThread(self.threads[4])
-            self.threads[4].started.connect(self.workers[4].definition)
-            self.threads[4].finished.connect(self.threads[4].exit)
-            self.threads[4].finished.connect(self.threads[4].quit)
+            self.threads[4] = MyThread(input_text, 'en-en', self.tr.definition)
+            self.threads[4].result.connect(self.TE_5_set_text)
             self.threads[4].start()
+            self.threads[4].finished.connect(self.threads[4].exit)
 
         elif lang is 'ru-en':
             self.text_edit_1.setText('')
             self.text_edit_4.setText('')
             self.text_edit_5.setText('')
 
-        self.threads[1] = QThread()
-        self.workers[1] = Worker(input_text, lang, self.tr)
-        self.workers[1].result[str].connect(self.TE_2_set_text)
-        self.workers[1].moveToThread(self.threads[1])
-        self.threads[1].started.connect(self.workers[1].translate_yandex)
-        self.threads[1].finished.connect(self.threads[1].exit)
-        self.threads[1].finished.connect(self.threads[1].quit)
-        self.threads[1].start()
 
-        self.threads[2] = QThread()
-        self.workers[2] = Worker(input_text, lang, self.tr)
-        self.workers[2].result[str].connect(self.TE_3_set_text)
-        self.workers[2].moveToThread(self.threads[2])
-        self.threads[2].started.connect(self.workers[2].dictionary_yandex)
-        self.threads[2].finished.connect(self.threads[2].exit)
-        self.threads[2].finished.connect(self.threads[2].quit)
+        self.threads[1] = MyThread(input_text, lang, self.tr.translate_yandex)
+        self.threads[1].result.connect(self.TE_2_set_text)
+        self.threads[1].start()
+        self.threads[1].finished.connect(self.threads[1].exit)
+
+        self.threads[2] = MyThread(input_text, lang, self.tr.dictionary_yandex)
+        self.threads[2].result.connect(self.TE_3_set_text)
         self.threads[2].start()
+        self.threads[2].finished.connect(self.threads[2].exit)
 
         self.inputEdit.selectAll()
         self.history.append(input_text)
@@ -240,50 +215,18 @@ class MainWindow(QMainWindow):
         self.move(qr.topLeft())
 
 
-class Worker(QObject):
+class MyThread(QThread):
     result = pyqtSignal(str)
 
-    def __init__(self, input_text, lang, translator):
-        self.tr = translator
-        self.lang = lang
+    def __init__(self, input_text, lang, func, parent=None):
         self.input_text = input_text
-        super().__init__()
+        self.lang = lang
+        self.func = func
+        super().__init__(parent)
 
-    def translate_google(self):
+    def run(self):
         try:
-            output = self.tr.translate_google(self.input_text, self.lang)
-        except requests.exceptions.ConnectionError:
-            self.result.emit("Network error")
-            return
-        self.result.emit(output)
-
-    def synonym(self):
-        try:
-            output = self.tr.synonym(self.input_text, self.lang)
-        except requests.exceptions.ConnectionError:
-            self.result.emit("Network error")
-            return
-        self.result.emit(output)
-
-    def definition(self):
-        try:
-            output = self.tr.definition(self.input_text, self.lang)
-        except requests.exceptions.ConnectionError:
-            self.result.emit("Network error")
-            return
-        self.result.emit(output)
-
-    def translate_yandex(self):
-        try:
-            output = self.tr.translate_yandex(self.input_text, self.lang)
-        except requests.exceptions.ConnectionError:
-            self.result.emit("Network error")
-            return
-        self.result.emit(output)
-
-    def dictionary_yandex(self):
-        try:
-            output = self.tr.dictionary_yandex(self.input_text, self.lang)
+            output = self.func(self.input_text, self.lang)
         except requests.exceptions.ConnectionError:
             self.result.emit("Network error")
             return
