@@ -13,8 +13,7 @@ class Translator:
         self.ya_translate_token = config['Yandex']["translate_token"]
         self.ya_dictionary_token = config['Yandex']["dictionary_token"]
         # self.abbyy_key = config['Lingvolive_ABBYY']["key"]
-        # self.abbyy_token = ''
-        # self.abbyy_get_token(self.abbyy_key)
+        # self.abbyy_token = self._abbyy_get_token(self.abbyy_key)
 
     @staticmethod
     def translate_google(text, lang='en-ru'):
@@ -40,17 +39,18 @@ class Translator:
             res += dict['Dictionary']
             res += '\n'
 
-    def abbyy_get_token(self, abbyy_key):
+    def _abbyy_get_token(self, abbyy_key):
         # token TTL 24h
         url = r'https://developers.lingvolive.com/api/v1.1/authenticate'
         headers = dict(Authorization="Basic " + abbyy_key)
         response = requests.post(url, headers=headers)
-        self.abbyy_token = response.text
+        return response.text
 
     @staticmethod
-    def synonym(text):
+    def synonym(text, lang='en-en'):
         # do not support russian
-        response = voc.synonym(text)
+        src, dest = lang.split('-')
+        response = voc.synonym(text, src, dest)
         if not response or response == '[]':
             return ''
         response = json.loads(response)
@@ -63,9 +63,10 @@ class Translator:
         return output
 
     @staticmethod
-    def definition(text):
+    def definition(text, lang='en-en'):
         # do not support russian
-        response = voc.meaning(text)
+        src, dest = lang.split('-')
+        response = voc.meaning(text, src, dest)
         if not response or response == '[]':
             return ''
         response = json.loads(response)

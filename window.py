@@ -166,7 +166,7 @@ class MainWindow(QMainWindow):
             self.threads[0].start()
 
             self.threads[3] = QThread()
-            self.workers[3] = Worker(input_text, lang, self.tr)
+            self.workers[3] = Worker(input_text, 'en-en', self.tr)
             self.workers[3].result[str].connect(self.TE_4_set_text)
             self.workers[3].moveToThread(self.threads[3])
             self.threads[3].started.connect(self.workers[3].synonym)
@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
             self.threads[3].start()
 
             self.threads[4] = QThread()
-            self.workers[4] = Worker(input_text, lang, self.tr)
+            self.workers[4] = Worker(input_text, 'en-en', self.tr)
             self.workers[4].result[str].connect(self.TE_5_set_text)
             self.workers[4].moveToThread(self.threads[4])
             self.threads[4].started.connect(self.workers[4].definition)
@@ -259,7 +259,7 @@ class Worker(QObject):
 
     def synonym(self):
         try:
-            output = self.tr.synonym(self.input_text)
+            output = self.tr.synonym(self.input_text, self.lang)
         except requests.exceptions.ConnectionError:
             self.result.emit("Network error")
             return
@@ -267,7 +267,7 @@ class Worker(QObject):
 
     def definition(self):
         try:
-            output = self.tr.definition(self.input_text)
+            output = self.tr.definition(self.input_text, self.lang)
         except requests.exceptions.ConnectionError:
             self.result.emit("Network error")
             return
