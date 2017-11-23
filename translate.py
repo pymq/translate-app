@@ -54,7 +54,7 @@ class Translator:
         if not response or response == '[]':
             return ''
         response = json.loads(response)
-        output = "Synonyms:\n"
+        output = ""
         i = 1
         for a in response:
             output += '\t' + str(i) + '. ' + a['text']
@@ -70,7 +70,7 @@ class Translator:
         if not response or response == '[]':
             return ''
         response = json.loads(response)
-        output = "Definitions:\n"
+        output = ""
         i = 1
         for a in response:
             output += '\t' + str(i) + '. ' + a['text']

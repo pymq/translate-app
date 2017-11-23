@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
     def init_UI(self):
-        # self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon('icon.png'))
         self.resize(self.width, self.height)
         self.setWindowTitle(self.title)
         self.center()
@@ -33,28 +33,20 @@ class MainWindow(QMainWindow):
         grid = QGridLayout()
         grid.setSpacing(8)
 
-        tabstop = 13
+        tab_stop = 13
         self.inputEdit = QLineEdit()
         self.submitButton = QPushButton('&Translate')
         self.submitButton.setMaximumSize(QSize(100, 40))
-        self.text_edit_1 = QTextEdit()
-        self.text_edit_1.setTabStopWidth(tabstop)
-        self.text_edit_2 = QTextEdit()
-        self.text_edit_2.setTabStopWidth(tabstop)
-        self.text_edit_3 = QTextEdit()
-        self.text_edit_3.setTabStopWidth(tabstop)
-        self.text_edit_4 = QTextEdit()
-        self.text_edit_4.setTabStopWidth(tabstop)
-        self.text_edit_5 = QTextEdit()
-        self.text_edit_5.setTabStopWidth(tabstop)
-
+        self.text_edits = []
+        for _ in range(5):
+            self.text_edits.append(QTextEdit(tabStopWidth=tab_stop))
         grid.addWidget(self.inputEdit, 1, 0)
         grid.addWidget(self.submitButton, 1, 1)
-        grid.addWidget(self.text_edit_1, 2, 0)
-        grid.addWidget(self.text_edit_2, 3, 0)
-        grid.addWidget(self.text_edit_3, 2, 1, 2, 1)
-        grid.addWidget(self.text_edit_4, 2, 2)
-        grid.addWidget(self.text_edit_5, 3, 2)
+        grid.addWidget(self.text_edits[0], 2, 0)
+        grid.addWidget(self.text_edits[1], 3, 0)
+        grid.addWidget(self.text_edits[2], 2, 1, 2, 1)
+        grid.addWidget(self.text_edits[3], 2, 2)
+        grid.addWidget(self.text_edits[4], 3, 2)
 
         mainWidget.setLayout(grid)
         self.setCentralWidget(mainWidget)
@@ -122,12 +114,27 @@ class MainWindow(QMainWindow):
         self.history.navigate_back()
         self.inputEdit.setText(self.history.current_word)
         self.inputEdit.selectAll()
+        self.restore_translations()
 
     def navigate_history_forward(self):
         # key up is 16777235
         self.history.navigate_forward()
         self.inputEdit.setText(self.history.current_word)
         self.inputEdit.selectAll()
+        self.restore_translations()
+
+
+    def restore_translations(self):
+        translations = self.history.current_word_translations
+        if not translations:
+            for i in range(5):
+                self.text_edits[i].setText('')
+            return
+        for i in range(5):
+            if i in translations:
+                self.text_edits[i].setText(translations[i])
+            else:
+                self.text_edits[i].setText('')
 
     def keyPressEvent(self, QKeyEvent):
         if QKeyEvent.key() == Qt.Key_Up:
@@ -152,60 +159,70 @@ class MainWindow(QMainWindow):
         if lang is 'en-ru':
             self.threads[0] = MyThread(input_text, lang, self.tr.translate_google)
             self.threads[0].result.connect(self.TE_1_set_text)
-            self.threads[0].start()
             self.threads[0].finished.connect(self.threads[0].exit)
+            self.threads[0].start()
 
             self.threads[3] = MyThread(input_text, 'en-en', self.tr.synonym)
             self.threads[3].result.connect(self.TE_4_set_text)
-            self.threads[3].start()
             self.threads[3].finished.connect(self.threads[3].exit)
+            self.threads[3].start()
 
             self.threads[4] = MyThread(input_text, 'en-en', self.tr.definition)
             self.threads[4].result.connect(self.TE_5_set_text)
-            self.threads[4].start()
             self.threads[4].finished.connect(self.threads[4].exit)
+            self.threads[4].start()
 
         elif lang is 'ru-en':
-            self.text_edit_1.setText('')
-            self.text_edit_4.setText('')
-            self.text_edit_5.setText('')
+            self.text_edits[0].setText('')
+            self.text_edits[3].setText('')
+            self.text_edits[4].setText('')
 
 
         self.threads[1] = MyThread(input_text, lang, self.tr.translate_yandex)
         self.threads[1].result.connect(self.TE_2_set_text)
-        self.threads[1].start()
         self.threads[1].finished.connect(self.threads[1].exit)
+        self.threads[1].start()
 
         self.threads[2] = MyThread(input_text, lang, self.tr.dictionary_yandex)
         self.threads[2].result.connect(self.TE_3_set_text)
-        self.threads[2].start()
         self.threads[2].finished.connect(self.threads[2].exit)
+        self.threads[2].start()
 
         self.inputEdit.selectAll()
         self.history.append(input_text)
 
-    @pyqtSlot(str)
-    def TE_1_set_text(self, s):
-        self.text_edit_1.setText('Google Translate\n\n' + s)
+    @pyqtSlot(str, str)
+    def TE_1_set_text(self, translation, input_text):
+        output = 'Google Translate\n\n' + translation
+        self.text_edits[0].setText(output)
+        self.history.upload_word_translations(input_text, {0: output})
 
-    @pyqtSlot(str)
-    def TE_2_set_text(self, s):
-        self.text_edit_2.setText('Yandex Translate\n\n' + s)
+    @pyqtSlot(str, str)
+    def TE_2_set_text(self, translation, input_text):
+        output = 'Yandex Translate\n\n' + translation
+        self.text_edits[1].setText(output)
+        self.history.upload_word_translations(input_text, {1: output})
 
-    @pyqtSlot(str)
-    def TE_3_set_text(self, s):
-        self.text_edit_3.setText('Yandex Dictionary\n\n' + s)
+    @pyqtSlot(str, str)
+    def TE_3_set_text(self, translation, input_text):
+        output = 'Yandex Dictionary\n\n' + translation
+        self.text_edits[2].setText(output)
+        self.history.upload_word_translations(input_text, {2: output})
 
-    @pyqtSlot(str)
-    def TE_4_set_text(self, s):
-        self.text_edit_4.setText(s)
+    @pyqtSlot(str, str)
+    def TE_4_set_text(self, translation, input_text):
+        output = "Synonyms:\n" + translation
+        self.text_edits[3].setText(output)
+        self.history.upload_word_translations(input_text, {3: output})
 
-    @pyqtSlot(str)
-    def TE_5_set_text(self, s):
-        self.text_edit_5.setText(s)
+    @pyqtSlot(str, str)
+    def TE_5_set_text(self, translation, input_text):
+        output = "Definitions:\n" + translation
+        self.text_edits[4].setText(output)
+        self.history.upload_word_translations(input_text, {4: output})
 
     def closeEvent(self, QCloseEvent):
-        self.history.upload_history()
+        self.history.save_history()
         super().closeEvent(QCloseEvent)
 
     def center(self):
@@ -216,7 +233,7 @@ class MainWindow(QMainWindow):
 
 
 class MyThread(QThread):
-    result = pyqtSignal(str)
+    result = pyqtSignal(str, str)
 
     def __init__(self, input_text, lang, func, parent=None):
         self.input_text = input_text
@@ -230,7 +247,7 @@ class MyThread(QThread):
         except requests.exceptions.ConnectionError:
             self.result.emit("Network error")
             return
-        self.result.emit(output)
+        self.result.emit(output, self.input_text)
 
 
 if __name__ == '__main__':
