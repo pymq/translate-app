@@ -51,19 +51,14 @@ class MainWindow(QMainWindow):
         mainWidget.setLayout(grid)
         self.setCentralWidget(mainWidget)
 
-        exitAction = QAction('Exit', self)
-        exitAction.setShortcut('Ctrl+Shift+Q')
-        exitAction.setStatusTip('Exit application')
+        exitAction = QAction('Exit', self, shortcut='Ctrl+Shift+Q', statusTip='Exit application')
         exitAction.triggered.connect(self.close)
 
-        hideAction = QAction('Hide', self)
-        hideAction.setShortcut('Ctrl+Q')
-        hideAction.setStatusTip('Hide window')
+        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window')
         hideAction.triggered.connect(self.hide)
 
-        translateAction = QAction('Translate', self.inputEdit)
+        translateAction = QAction('Translate', self, statusTip='Translate')
         translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
-        translateAction.setStatusTip('Translate')
         translateAction.triggered.connect(self.translate)
 
         # downAction = QAction('History backward', self.inputEdit)
@@ -76,8 +71,7 @@ class MainWindow(QMainWindow):
         # upAction.setStatusTip('History forward')
         # upAction.triggered.connect(self.navigate_history_forward)
 
-        showAction = QAction('Show', self)
-        showAction.setStatusTip('Show window')
+        showAction = QAction('Show', self, statusTip='Show window')
         showAction.triggered.connect(self.show)
 
         self.tray = QSystemTrayIcon(QIcon('icon.png'), self)
@@ -245,7 +239,7 @@ class MyThread(QThread):
         try:
             output = self.func(self.input_text, self.lang)
         except requests.exceptions.ConnectionError:
-            self.result.emit("Network error")
+            self.result.emit("Network error", self.input_text)
             return
         self.result.emit(output, self.input_text)
 

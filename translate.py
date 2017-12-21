@@ -89,7 +89,8 @@ class Translator:
         response = dict(requests.get(url, payload).json())['def']
         result = ''
         for pos in response:
-            result = result + pos['pos'] + ' ' + pos['text'] + ' - '
+            if 'pos' in pos and 'text' in pos:
+                result = result + pos['pos'] + ' ' + pos['text'] + ' - '
             i = 1
             for variant in pos['tr']:
                 tr_syn_list = []
