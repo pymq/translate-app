@@ -4,7 +4,7 @@ import requests
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal, QThread
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, \
-    QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu
+    QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu, QCompleter
 
 from history import History
 from translate import Translator
@@ -74,6 +74,11 @@ class MainWindow(QMainWindow):
         self.inputEdit.pasted.connect(self.translate)
         self.inputEdit.up_pressed.connect(self.navigate_history_forward)
         self.inputEdit.down_pressed.connect(self.navigate_history_backward)
+
+        with open('dictionary.txt', "r") as f:
+            lines_list = list(map(str.strip, f.readlines()))
+        completer = QCompleter(lines_list, self.inputEdit)
+        self.inputEdit.setCompleter(completer)
 
         translateAction = QAction('Translate', self, statusTip='Translate', triggered=self.translate)
         translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
