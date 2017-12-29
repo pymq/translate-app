@@ -1,17 +1,33 @@
-import os
 import sys
 
 import requests
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QThread
+from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal, QThread
+from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, \
-    QWidget, QMessageBox, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu
-from PyQt5.QtGui import QIcon, QKeySequence, QKeyEvent
-from PyQt5.QtCore import QCoreApplication, Qt, QSize
+    QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu
 
-from translate import Translator
 from history import History
+from translate import Translator
 
 
+class MyLineEdit(QLineEdit):
+    pasted = pyqtSignal()
+    up_pressed = pyqtSignal()
+    down_pressed = pyqtSignal()
+
+    def myPaste(self):
+        self.paste()
+        self.pasted.emit()
+
+    def keyPressEvent(self, QKeyEvent):
+        if QKeyEvent.key() == Qt.Key_Up:
+            self.up_pressed.emit()
+        if QKeyEvent.key() == Qt.Key_Down:
+            self.down_pressed.emit()
+        super().keyPressEvent(QKeyEvent)
+
+
+# noinspection PyArgumentList,PyUnresolvedReferences
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -34,7 +50,7 @@ class MainWindow(QMainWindow):
         grid.setSpacing(8)
 
         tab_stop = 13
-        self.inputEdit = QLineEdit()
+        self.inputEdit = MyLineEdit()
         self.submitButton = QPushButton('&Translate')
         self.submitButton.setMaximumSize(QSize(100, 40))
         self.text_edits = []
@@ -51,28 +67,19 @@ class MainWindow(QMainWindow):
         mainWidget.setLayout(grid)
         self.setCentralWidget(mainWidget)
 
-        exitAction = QAction('Exit', self, shortcut='Ctrl+Shift+Q', statusTip='Exit application')
-        exitAction.triggered.connect(self.close)
+        exitAction = QAction('Exit', self, shortcut='Ctrl+Shift+Q', statusTip='Exit application', triggered=self.close)
 
-        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window')
-        hideAction.triggered.connect(self.hide)
+        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window', triggered=self.hide)
 
-        translateAction = QAction('Translate', self, statusTip='Translate')
+        self.inputEdit.pasted.connect(self.translate)
+        self.inputEdit.up_pressed.connect(self.navigate_history_forward)
+        self.inputEdit.down_pressed.connect(self.navigate_history_backward)
+
+        translateAction = QAction('Translate', self, statusTip='Translate', triggered=self.translate)
         translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
-        translateAction.triggered.connect(self.translate)
+        self.submitButton.pressed.connect(self.translate)
 
-        # downAction = QAction('History backward', self.inputEdit)
-        # downAction.setShortcuts([Qt.Key_Down, 16777237])
-        # downAction.setStatusTip('History backward')
-        # downAction.triggered.connect(self.navigate_history_backward)
-        #
-        # upAction = QAction('History forward', self)
-        # upAction.setShortcuts([Qt.Key_Up, 16777235])
-        # upAction.setStatusTip('History forward')
-        # upAction.triggered.connect(self.navigate_history_forward)
-
-        showAction = QAction('Show', self, statusTip='Show window')
-        showAction.triggered.connect(self.show)
+        showAction = QAction('Show', self, statusTip='Show window', triggered=self.show)
 
         self.tray = QSystemTrayIcon(QIcon('icon.png'), self)
         traymenu = QMenu()
@@ -90,18 +97,18 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(hideAction)
         fileMenu.addAction(translateAction)
 
-        self.submitButton.pressed.connect(self.translate)
-
-        # self.inputEdit.installEventFilter(self)
-
+        self.inputEdit.installEventFilter(self)
         self.show()
 
-    # def eventFilter(self, QObject, QEvent):
-    #     if QObject == self.inputEdit:
-    #         if QEvent == QEvent.KeyPress:
-    #             if QEvent.key() == Qt.Key_Down or QEvent.key() == Qt.Key_Up:
-    #                 self.output4TextEdit.setText("it works!")
-    #     return super().eventFilter(QObject, QEvent)
+    def eventFilter(self, QObject, QEvent):
+        if (QObject == self.inputEdit):
+            if (QEvent.type() == QEvent.KeyPress):
+                if (QEvent.matches(QKeySequence.Paste)):
+                    self.inputEdit.myPaste()
+                    return True
+            return False
+        else:
+            return QMainWindow.eventFilter(QObject, QEvent)
 
     def navigate_history_backward(self):
         # key down is 16777237
@@ -117,7 +124,6 @@ class MainWindow(QMainWindow):
         self.inputEdit.selectAll()
         self.restore_translations()
 
-
     def restore_translations(self):
         translations = self.history.current_word_translations
         if not translations:
@@ -130,13 +136,7 @@ class MainWindow(QMainWindow):
             else:
                 self.text_edits[i].setText('')
 
-    def keyPressEvent(self, QKeyEvent):
-        if QKeyEvent.key() == Qt.Key_Up:
-            self.navigate_history_forward()
-        if QKeyEvent.key() == Qt.Key_Down:
-            self.navigate_history_backward()
-
-
+    @pyqtSlot()
     def translate(self):
         input_text = self.inputEdit.text().strip().lower()
         if input_text == '':
@@ -170,7 +170,6 @@ class MainWindow(QMainWindow):
             self.text_edits[0].setText('')
             self.text_edits[3].setText('')
             self.text_edits[4].setText('')
-
 
         self.threads[1] = MyThread(input_text, lang, self.tr.translate_yandex)
         self.threads[1].result.connect(self.TE_2_set_text)
