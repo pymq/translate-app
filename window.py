@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         self.inputEdit.up_pressed.connect(self.navigate_history_forward)
         self.inputEdit.down_pressed.connect(self.navigate_history_backward)
 
-        with open('dictionary.txt', "r") as f:
+        with open('dictionary.txt', "r", encoding='utf-8', newline='') as f:
             lines_list = list(map(str.strip, f.readlines()))
         completer = QCompleter(lines_list, self.inputEdit)
         self.inputEdit.setCompleter(completer)
