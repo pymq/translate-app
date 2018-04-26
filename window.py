@@ -249,6 +249,11 @@ class MyThread(QThread):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = MainWindow()
+    import traceback
+    try:
+        app = QApplication(sys.argv)
+        ex = MainWindow()
+    except Exception as e:
+        with open('log.log', 'w') as f:
+            f.write(traceback.format_exc())
     sys.exit(app.exec_())
