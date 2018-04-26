@@ -2,10 +2,10 @@
 Hardcoded en-ru & ru-en translation.
 
 # Hotkeys
-arrows up & down - перемещение по истории
-Enter OR Ctrl + Space - перевод
-Qtrl + Q - свернуть окно
-Qtrl + Shift + Q - закрыть окно
+- arrows up & down - перемещение по истории
+- Enter OR Ctrl + Space - перевод
+- Qtrl + Q - свернуть окно
+- Qtrl + Shift + Q - закрыть окно
 
 # Features:
 - перевод от Гугла
@@ -19,10 +19,11 @@ Qtrl + Shift + Q - закрыть окно
 
 # Installation
 Для использования Яндекс словаря и Яндекс переводчика необходимо получить бесплатный API ключ [здесь](https://tech.yandex.ru/translate/doc/dg/concepts/api-keys-docpage/) и [здесь](https://tech.yandex.ru/keys/get/?service=dict) и создать в папке файл `config.ini` со следующим содержимым:
-> [Yandex]
-> translate_token = trnsl.1.1.xxxxxxxxx.xxxxxxxxx.xxxxxxxxxxxxx
-> dictionary_token = dict.1.1.xxxxxxxxx.xxxxxxxxx.xxxxxxxxxxxxx
-
+```
+[Yandex]
+translate_token = trnsl.1.1.xxxxxxxxx.xxxxxxxxx.xxxxxxxxxxxxx
+dictionary_token = dict.1.1.xxxxxxxxx.xxxxxxxxx.xxxxxxxxxxxxx
+```
 Простой запуск:
 ```
 pip install -r requirements.txt
