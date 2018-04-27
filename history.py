@@ -2,9 +2,13 @@ import os
 
 
 class History(list):
-    def __init__(self, file_name: str, read_count: int):
+    def __init__(self, filename: str, read_count: int):
+        """
+        :param filename: путь к файлу, в который будет записываться история. Если такого файла не существует, будет создан
+        :param read_count: количество слов, считывающихся из последней истории
+        """
         super().__init__()
-        self._file_name = file_name
+        self._filename = filename
         self._curr_pos = 0
         self._history_uploaded = 0
         self._read_history(read_count)
@@ -27,6 +31,8 @@ class History(list):
         self._write_history()
 
     def append(self, obj: str) -> None:
+        if self and self[-1] == obj:
+            return
         super().append(obj)
         self._curr_pos = len(self) - 1
 
@@ -38,17 +44,17 @@ class History(list):
 
     def _write_history(self):
         is_new = True
-        if os.path.exists(self._file_name):
+        if os.path.exists(self._filename):
             is_new = False
-        with open(self._file_name, 'a') as f:
+        with open(self._filename, 'a') as f:
             if not is_new:
                 f.write('\n')
             f.write('\n'.join(self[self._history_uploaded:]))
 
     def _read_history(self, n: int) -> None:
-        if not os.path.exists(self._file_name):
+        if not os.path.exists(self._filename):
             return
-        with open(self._file_name, "r") as f:
+        with open(self._filename, "r") as f:
             lines_list = list(map(str.strip, f.readlines()[-n:]))
 
         self.extend(lines_list)

@@ -1,5 +1,5 @@
 appdirs==1.4.3
-certifi==2017.11.5
+certifi==2018.4.16
 chardet==3.0.4
 configparser==3.5.0
 googletrans==2.2.0
@@ -7,11 +7,11 @@ h2==3.0.1
 hpack==3.0.0
 hyperframe==5.1.0
 idna==2.6
-packaging==16.8
+packaging==17.1
 pyparsing==2.2.0
-PyQt5==5.9.2
+PyQt5==5.10.1
 requests==2.18.4
-sip==4.19.6
+sip==4.19.8
 six==1.11.0
 urllib3==1.22
 Vocabulary==1.0.4

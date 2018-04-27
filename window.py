@@ -3,8 +3,9 @@ import sys
 import requests
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal, QThread
 from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, \
-    QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu, QCompleter
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QTextEdit, QAction,
+                             QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu,
+                             QCompleter)
 
 from history import History
 from translate import Translator
@@ -35,7 +36,7 @@ class MainWindow(QMainWindow):
         self.width = 920
         self.height = 620
         self.tr = Translator()
-        self.history = History("history.txt", 10)
+        self.history = History("testss.txt", 10)
         self.threads = [None for _ in range(5)]
         self.init_UI()
 
@@ -54,8 +55,10 @@ class MainWindow(QMainWindow):
         self.submitButton = QPushButton('&Translate')
         self.submitButton.setMaximumSize(QSize(100, 40))
         self.text_edits = []
-        for _ in range(5):
+        for i in range(5):
             self.text_edits.append(QTextEdit(tabStopWidth=tab_stop))
+            self.text_edits[i].setReadOnly(True)
+
         grid.addWidget(self.inputEdit, 1, 0)
         grid.addWidget(self.submitButton, 1, 1)
         grid.addWidget(self.text_edits[0], 2, 0)
@@ -74,11 +77,6 @@ class MainWindow(QMainWindow):
         self.inputEdit.pasted.connect(self.translate)
         self.inputEdit.up_pressed.connect(self.navigate_history_forward)
         self.inputEdit.down_pressed.connect(self.navigate_history_backward)
-
-        with open('dictionary.txt', "r", encoding='utf-8', newline='') as f:
-            lines_list = list(map(str.strip, f.readlines()))
-        completer = QCompleter(lines_list, self.inputEdit)
-        self.inputEdit.setCompleter(completer)
 
         translateAction = QAction('Translate', self, statusTip='Translate', triggered=self.translate)
         translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
@@ -104,6 +102,11 @@ class MainWindow(QMainWindow):
 
         self.inputEdit.installEventFilter(self)
         self.show()
+
+        with open('dictionary.txt', "r", encoding='utf-8', newline='') as f:
+            lines_list = list(map(str.strip, f.readlines()))
+        completer = QCompleter(lines_list, self.inputEdit)
+        self.inputEdit.setCompleter(completer)
 
     def eventFilter(self, QObject, QEvent):
         if (QObject == self.inputEdit):
@@ -249,11 +252,6 @@ class MyThread(QThread):
 
 
 if __name__ == '__main__':
-    import traceback
-    try:
-        app = QApplication(sys.argv)
-        ex = MainWindow()
-    except Exception as e:
-        with open('log.log', 'w') as f:
-            f.write(traceback.format_exc())
+    app = QApplication(sys.argv)
+    ex = MainWindow()
     sys.exit(app.exec_())

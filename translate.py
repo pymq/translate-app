@@ -55,11 +55,9 @@ class Translator:
             return ''
         response = json.loads(response)
         output = ""
-        i = 1
-        for a in response:
-            output += '\t' + str(i) + '. ' + a['text']
+        for i, a in enumerate(response):
+            output += '\t' + str(i + 1) + '. ' + a['text']
             output += '\n'
-            i += 1
         return output
 
     @staticmethod
@@ -71,11 +69,9 @@ class Translator:
             return ''
         response = json.loads(response)
         output = ""
-        i = 1
-        for a in response:
-            output += '\t' + str(i) + '. ' + a['text']
+        for i, a in enumerate(response):
+            output += '\t' + str(i + 1) + '. ' + a['text']
             output += '\n'
-            i += 1
         return output
 
     def translate_yandex(self, text, lang='en-ru'):
