@@ -4,8 +4,9 @@ Hardcoded en-ru & ru-en translation.
 # Hotkeys
 - arrows up & down - перемещение по истории
 - Enter OR Ctrl + Space - перевод
-- Qtrl + Q - свернуть окно
-- Qtrl + Shift + Q - закрыть окно
+- Ctrl + Q - свернуть окно
+- Ctrl + Shift + Q - закрыть окно
+- Ctrl + L - перемещение курсора на ввод
 
 # Features:
 - перевод от Гугла

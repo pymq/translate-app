@@ -74,6 +74,8 @@ class MainWindow(QMainWindow):
 
         hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window', triggered=self.hide)
 
+        selectInputAction = QAction('Focus input', self, shortcut='Ctrl+L', triggered=self.input_edit_set_focus)
+
         self.inputEdit.pasted.connect(self.translate)
         self.inputEdit.up_pressed.connect(self.navigate_history_forward)
         self.inputEdit.down_pressed.connect(self.navigate_history_backward)
@@ -99,6 +101,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(exitAction)
         fileMenu.addAction(hideAction)
         fileMenu.addAction(translateAction)
+        fileMenu.addAction(selectInputAction)
 
         self.inputEdit.installEventFilter(self)
         self.show()
@@ -147,13 +150,13 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def translate(self):
         input_text = self.inputEdit.text().strip().lower()
-        if input_text == '':
+        if not input_text:
             self.inputEdit.setText('')
             return
         en_alp = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
                   'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
-        if input_text.lower()[0] in en_alp or input_text[1] in en_alp:
+        if input_text[0] in en_alp or input_text[1] in en_alp:
             lang = 'en-ru'
         else:
             lang = 'ru-en'
@@ -189,8 +192,12 @@ class MainWindow(QMainWindow):
         self.threads[2].finished.connect(self.threads[2].exit)
         self.threads[2].start()
 
-        self.inputEdit.selectAll()
+        self.input_edit_set_focus()
         self.history.append(input_text)
+
+    def input_edit_set_focus(self):
+        self.inputEdit.selectAll()
+        self.inputEdit.setFocus()
 
     @pyqtSlot(str, str)
     def TE_1_set_text(self, translation, input_text):

@@ -10,8 +10,8 @@ class Translator:
     def __init__(self):
         config = configparser.ConfigParser()
         config.read('config.ini')
-        self.ya_translate_token = config['Yandex']["translate_token"]
-        self.ya_dictionary_token = config['Yandex']["dictionary_token"]
+        self.ya_translate_token = config.get('Yandex', 'translate_token')
+        self.ya_dictionary_token = config.get('Yandex', 'dictionary_token')
         # self.abbyy_key = config['Lingvolive_ABBYY']["key"]
         # self.abbyy_token = self._abbyy_get_token(self.abbyy_key)
 
