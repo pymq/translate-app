@@ -1,8 +1,9 @@
 import os
+from typing import Dict, Optional
 
 
 class History(list):
-    def __init__(self, filename: str, read_count: int):
+    def __init__(self, filename: str, read_count: int = 10):
         """
         :param filename: путь к файлу, в который будет записываться история. Если такого файла не существует, будет создан
         :param read_count: количество слов, считывающихся из последней истории
@@ -12,15 +13,15 @@ class History(list):
         self._curr_pos = 0
         self._history_uploaded = 0
         self._read_history(read_count)
-        self._translations = {}
+        self._translations = dict()
 
-    def upload_word_translations(self, word: str, dic: dict):
+    def upload_word_translations(self, word: str, dic: Dict[int, str]):
         if not word in self._translations:
             self._translations[word] = {}
         self._translations[word].update(dic)
 
     @property
-    def current_word_translations(self) -> dict:
+    def current_word_translations(self) -> Optional[Dict[int, str]]:
         if not self.current_word in self._translations:
             return None
         return self._translations[self.current_word]
@@ -62,7 +63,7 @@ class History(list):
         self._curr_pos = -1  # чтобы начинать с первого элемента
 
     def navigate_back(self):
-        if self._curr_pos is -1:
+        if self._curr_pos == -1:
             self._curr_pos = self._history_uploaded - 1
             return
         if self._curr_pos <= 0:

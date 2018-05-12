@@ -1,7 +1,7 @@
 import configparser
-import requests
 import json
 
+import requests
 from googletrans import Translator as gtr
 from vocabulary.vocabulary import Vocabulary as voc
 

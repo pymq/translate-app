@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self.width = 920
         self.height = 620
         self.tr = Translator()
-        self.history = History("history.txt", 10)
+        self.history = History("history.txt")
         self.threads = [None for _ in range(5)]
         self.init_UI()
 
