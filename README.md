@@ -11,7 +11,7 @@ Hardcoded en-ru & ru-en translation.
 # Features:
 - перевод от Гугла
 - перевод, словарь Яндекса
-- синонимы и определения от urbandictionary, wordnik, glosbe, bighugelabs
+- определения от urbandictionary, wordnik, glosbe, bighugelabs, multitran
 - автоматическое определение направления перевода
 - SystemTrayIcon
 - сохранение истории перевода в файл и возможность просмотра истории с помощью стрелок вверх и вниз

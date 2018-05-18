@@ -1,11 +1,12 @@
+import os
 import sys
 
-from requests.exceptions import ConnectionError
 from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal, QThread
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import (QMainWindow, QApplication, QTextEdit, QAction,
                              QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu,
                              QCompleter)
+from requests.exceptions import ConnectionError
 
 from history import History
 from translate import Translator
@@ -35,8 +36,11 @@ class MainWindow(QMainWindow):
         self.title = 'Translator'
         self.width = 920
         self.height = 620
-        self.tr = Translator()
-        self.history = History("history.txt")
+
+        import module_locator
+        self.module_path = module_locator.module_path()
+        self.tr = Translator(os.path.join(self.module_path, 'config.ini'))
+        self.history = History(os.path.join(self.module_path, 'history.txt'))
         self.threads = [None for _ in range(5)]
         self.init_UI()
 
@@ -87,7 +91,7 @@ class MainWindow(QMainWindow):
 
         showAction = QAction('Show', self, statusTip='Show window', triggered=self.show)
 
-        self.tray = QSystemTrayIcon(QIcon('icon.png'), self)
+        self.tray = QSystemTrayIcon(QIcon(os.path.join(self.module_path, 'icon.png')), self)
         traymenu = QMenu()
         traymenu.addAction(showAction)
         traymenu.addAction('Settings')
@@ -106,11 +110,13 @@ class MainWindow(QMainWindow):
         self.inputEdit.installEventFilter(self)
         self.show()
 
-        with open('dictionary.txt', "r", encoding='utf-8', newline='') as f:
-            lines_list = list(map(str.strip, f.readlines()))
-        completer = QCompleter(lines_list, self.inputEdit)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)
-        self.inputEdit.setCompleter(completer)
+        dictionary_path = os.path.join(self.module_path, 'dictionary.txt')
+        if os.path.exists(dictionary_path):
+            with open(dictionary_path, "r", encoding='utf-8', newline='') as f:
+                lines_list = list(map(str.strip, f.readlines()))
+            completer = QCompleter(lines_list, self.inputEdit)
+            completer.setCaseSensitivity(Qt.CaseInsensitive)
+            self.inputEdit.setCompleter(completer)
 
     def eventFilter(self, QObject, QEvent):
         if (QObject == self.inputEdit):
@@ -164,25 +170,18 @@ class MainWindow(QMainWindow):
             lang = 'ru-en'
 
         if lang is 'en-ru':
-            self.threads[0] = CustomThread(input_text, lang, self.tr.translate_google)
-            self.threads[0].result.connect(self.TE_1_set_text)
-            self.threads[0].finished.connect(self.threads[0].exit)
-            self.threads[0].start()
-
-            self.threads[3] = CustomThread(input_text, 'en-en', self.tr.synonym)
-            self.threads[3].result.connect(self.TE_4_set_text)
-            self.threads[3].finished.connect(self.threads[3].exit)
-            self.threads[3].start()
-
             self.threads[4] = CustomThread(input_text, 'en-en', self.tr.definition)
             self.threads[4].result.connect(self.TE_5_set_text)
             self.threads[4].finished.connect(self.threads[4].exit)
             self.threads[4].start()
 
         elif lang is 'ru-en':
-            self.text_edits[0].setText('')
-            self.text_edits[3].setText('')
             self.text_edits[4].setText('')
+
+        self.threads[0] = CustomThread(input_text, lang, self.tr.translate_google)
+        self.threads[0].result.connect(self.TE_1_set_text)
+        self.threads[0].finished.connect(self.threads[0].exit)
+        self.threads[0].start()
 
         self.threads[1] = CustomThread(input_text, lang, self.tr.translate_yandex)
         self.threads[1].result.connect(self.TE_2_set_text)
@@ -194,6 +193,12 @@ class MainWindow(QMainWindow):
         self.threads[2].finished.connect(self.threads[2].exit)
         self.threads[2].start()
 
+        self.threads[3] = CustomThread(input_text, lang, self.tr.translate_multitran)
+        self.threads[3].result.connect(self.TE_4_set_text)
+        self.threads[3].finished.connect(self.threads[3].exit)
+        self.threads[3].start()
+
+        self.inputEdit.setText(input_text)
         self.input_edit_set_focus()
         self.history.append(input_text)
 
@@ -221,7 +226,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str, str)
     def TE_4_set_text(self, translation, input_text):
-        output = "Synonyms:\n" + translation
+        output = 'Multitran Dictionary\n\n' + translation
         self.text_edits[3].setText(output)
         self.history.upload_word_translations(input_text, {3: output})
 

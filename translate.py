@@ -5,11 +5,16 @@ import requests
 from googletrans import Translator as gtr
 from vocabulary.vocabulary import Vocabulary as voc
 
+from multitran import translate
+
 
 class Translator:
-    def __init__(self):
+    def __init__(self, config_path):
+        """
+        :param config_path: путь до файла с конфигурацией
+        """
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        config.read(config_path)
         self.ya_translate_token = config.get('Yandex', 'translate_token')
         self.ya_dictionary_token = config.get('Yandex', 'dictionary_token')
         # self.abbyy_key = config['Lingvolive_ABBYY']["key"]
@@ -45,6 +50,10 @@ class Translator:
         headers = dict(Authorization="Basic " + abbyy_key)
         response = requests.post(url, headers=headers)
         return response.text
+
+    def translate_multitran(self, text, lang):
+        lang = 1  # TODO
+        return translate(text, lang)
 
     @staticmethod
     def synonym(text, lang='en-en'):
