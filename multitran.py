@@ -49,6 +49,8 @@ def processTable(table, links_on=False):
     for tr in table.find_all('tr'):
         # for each row, corresponds to topic
         tds = tr.find_all('td')
+        if not tds:
+            continue
 
         if tds[0].has_attr('bgcolor') and tds[0]['bgcolor'] == "#DBDBDB":
             # a header of the table, with initial word and its properties
@@ -144,7 +146,8 @@ def translate(word, lang=1):  # TODO rename
             elif result[0] == 2:
                 # Word not found. Replacements may be present
                 variants = result[1]
-                variants[0] = ' ' + variants[0]  # add space to first variant
+                if variants:
+                    variants[0] = ' ' + variants[0]  # add space to first variant
 
                 string_variants = "Suggestions:\n"
                 for n, variant in enumerate(variants):
