@@ -64,8 +64,8 @@ class Translator:
             return ''
         response = json.loads(response)
         output = ""
-        for i, a in enumerate(response):
-            output += '\t' + str(i + 1) + '. ' + a['text']
+        for i, a in enumerate(response, start=1):
+            output += '\t' + str(i) + '. ' + a['text']
             output += '\n'
         return output
 
@@ -78,8 +78,8 @@ class Translator:
             return ''
         response = json.loads(response)
         output = ""
-        for i, a in enumerate(response):
-            output += '\t' + str(i + 1) + '. ' + a['text']
+        for i, a in enumerate(response, start=1):
+            output += '\t' + str(i) + '. ' + a['text']
             output += '\n'
         return output
 
