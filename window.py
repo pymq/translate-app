@@ -34,8 +34,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = 'Translator'
-        self.width = 920
-        self.height = 620
+        self.width = 970
+        self.height = 670
 
         import module_locator
         self.module_path = module_locator.module_path()
@@ -45,14 +45,14 @@ class MainWindow(QMainWindow):
         self.init_UI()
 
     def init_UI(self):
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(os.path.join(self.module_path, 'icon.png')))
         self.resize(self.width, self.height)
         self.setWindowTitle(self.title)
         self.center()
 
         mainWidget = QWidget()
         grid = QGridLayout()
-        grid.setSpacing(8)
+        grid.setSpacing(5)
 
         tab_stop = 13
         self.inputEdit = CustomLineEdit()
