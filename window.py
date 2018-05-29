@@ -67,9 +67,9 @@ class MainWindow(QMainWindow):
         grid.addWidget(self.submitButton, 1, 1)
         grid.addWidget(self.text_edits[0], 2, 0)
         grid.addWidget(self.text_edits[1], 3, 0)
-        grid.addWidget(self.text_edits[2], 2, 1, 2, 1)
-        grid.addWidget(self.text_edits[3], 2, 2)
-        grid.addWidget(self.text_edits[4], 3, 2)
+        grid.addWidget(self.text_edits[4], 4, 0)
+        grid.addWidget(self.text_edits[2], 2, 1, 3, 1)
+        grid.addWidget(self.text_edits[3], 2, 2, 3, 1)
 
         mainWidget.setLayout(grid)
         self.setCentralWidget(mainWidget)
