@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
 
         exitAction = QAction('Exit', self, shortcut='Ctrl+Shift+Q', statusTip='Exit application', triggered=self.close)
 
-        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window', triggered=self.hide)
+        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window', triggered=self.hide_or_show)
 
         selectInputAction = QAction('Focus input', self, shortcut='Ctrl+L', triggered=self.input_edit_set_focus)
         self.addAction(selectInputAction)
@@ -89,11 +89,11 @@ class MainWindow(QMainWindow):
         translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
         self.submitButton.pressed.connect(self.translate)
 
-        showAction = QAction('Show', self, statusTip='Show window', triggered=self.show)
+        self.hide_or_show_action = QAction('Hide', self, statusTip='Show window', triggered=self.hide_or_show)
 
         self.tray = QSystemTrayIcon(QIcon(os.path.join(self.module_path, 'icon.png')), self)
         traymenu = QMenu()
-        traymenu.addAction(showAction)
+        traymenu.addAction(self.hide_or_show_action)
         traymenu.addAction('Settings')
         traymenu.addAction(exitAction)
         self.tray.setContextMenu(traymenu)
@@ -117,6 +117,14 @@ class MainWindow(QMainWindow):
             completer = QCompleter(lines_list, self.inputEdit)
             completer.setCaseSensitivity(Qt.CaseInsensitive)
             self.inputEdit.setCompleter(completer)
+
+    def hide_or_show(self):
+        if self.isHidden():
+            self.hide_or_show_action.setText('Hide')
+            self.show()
+        else:
+            self.hide_or_show_action.setText('Show')
+            self.hide()
 
     def eventFilter(self, QObject, QEvent):
         if (QObject == self.inputEdit):
