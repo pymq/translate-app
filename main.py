@@ -1,13 +1,15 @@
 import os
 import sys
+from typing import List
 
-from PyQt5.QtCore import Qt, QSize, pyqtSlot, pyqtSignal, QThread
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThread
 from PyQt5.QtGui import QIcon, QKeySequence
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QTextEdit, QAction,
-                             QWidget, QDesktopWidget, QLineEdit, QPushButton, QGridLayout, QSystemTrayIcon, QMenu,
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QAction,
+                             QDesktopWidget, QLineEdit, QSystemTrayIcon, QMenu,
                              QCompleter)
 from requests.exceptions import ConnectionError
 
+import mainwindow
 from history import History
 from translate import Translator
 
@@ -30,86 +32,46 @@ class CustomLineEdit(QLineEdit):
 
 
 # noinspection PyArgumentList,PyUnresolvedReferences
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        self.title = 'Translator'
-        self.width = 970
-        self.height = 670
-
         import module_locator
         self.module_path = module_locator.module_path()
         self.tr = Translator(os.path.join(self.module_path, 'config.ini'))
         self.history = History(os.path.join(self.module_path, 'history.txt'))
         self.threads = [None for _ in range(5)]
-        self.init_UI()
-
-    def init_UI(self):
-        self.setWindowIcon(QIcon(os.path.join(self.module_path, 'icon.png')))
-        self.resize(self.width, self.height)
-        self.setWindowTitle(self.title)
+        self.setupUi(self)
         self.center()
-
-        mainWidget = QWidget()
-        grid = QGridLayout()
-        grid.setSpacing(5)
-
-        tab_stop = 13
-        self.inputEdit = CustomLineEdit()
-        self.submitButton = QPushButton('&Translate')
-        self.submitButton.setMaximumSize(QSize(100, 40))
-        self.text_edits = []
-        for i in range(5):
-            self.text_edits.append(QTextEdit(tabStopWidth=tab_stop))
-            self.text_edits[i].setReadOnly(True)
-
-        grid.addWidget(self.inputEdit, 1, 0)
-        grid.addWidget(self.submitButton, 1, 1)
-        grid.addWidget(self.text_edits[0], 2, 0)
-        grid.addWidget(self.text_edits[1], 3, 0)
-        grid.addWidget(self.text_edits[4], 4, 0)
-        grid.addWidget(self.text_edits[2], 2, 1, 3, 1)
-        grid.addWidget(self.text_edits[3], 2, 2, 3, 1)
-
-        mainWidget.setLayout(grid)
-        self.setCentralWidget(mainWidget)
-
-        exitAction = QAction('Exit', self, shortcut='Ctrl+Shift+Q', statusTip='Exit application', triggered=self.close)
-
-        hideAction = QAction('Hide', self, shortcut='Ctrl+Q', statusTip='Hide window', triggered=self.hide_or_show)
-
-        selectInputAction = QAction('Focus input', self, shortcut='Ctrl+L', triggered=self.input_edit_set_focus)
-        self.addAction(selectInputAction)
 
         self.inputEdit.pasted.connect(self.translate)
         self.inputEdit.up_pressed.connect(self.navigate_history_forward)
         self.inputEdit.down_pressed.connect(self.navigate_history_backward)
+        self.inputEdit.installEventFilter(self)
 
-        translateAction = QAction('Translate', self, statusTip='Translate', triggered=self.translate)
-        translateAction.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
-        self.submitButton.pressed.connect(self.translate)
-
-        self.hide_or_show_action = QAction('Hide', self, statusTip='Show window', triggered=self.hide_or_show)
+        self.actionExit = QAction('Exit', self, shortcut='Ctrl+Shift+Q', triggered=self.close)
+        self.actionHideOrShow = QAction('Hide', self, shortcut='Ctrl+Q', triggered=self.hide_or_show)
+        self.actionTranslate = QAction('Translate', self, triggered=self.translate)
+        self.actionTranslate.setShortcuts([16777220, Qt.CTRL + Qt.Key_Space, Qt.Key_Enter])
+        self.translateButton.pressed.connect(self.translate)
+        self.actionSettings = QAction('Settings')
+        selectInputAction = QAction('Focus input', self, shortcut='Ctrl+L', triggered=self.input_edit_set_focus)
+        self.addAction(selectInputAction)
 
         self.tray = QSystemTrayIcon(QIcon(os.path.join(self.module_path, 'icon.png')), self)
-        traymenu = QMenu()
-        traymenu.addAction(self.hide_or_show_action)
-        traymenu.addAction('Settings')
-        traymenu.addAction(exitAction)
-        self.tray.setContextMenu(traymenu)
+        trayMenu = QMenu()
+        trayMenu.addAction(self.actionHideOrShow)
+        trayMenu.addAction(self.actionSettings)
+        trayMenu.addAction(self.actionExit)
+        self.tray.setContextMenu(trayMenu)
         self.tray.show()
 
-        self.statusBar()
+        self.menuTranslator.addAction(self.actionTranslate)
+        self.menuTranslator.addAction(self.actionHideOrShow)
+        self.menuTranslator.addAction(self.actionExit)
+        self.menuTranslator.addAction(self.actionSettings)
+        self.menuBar.addAction(self.menuTranslator.menuAction())
 
-        self.menubar = self.menuBar()
-        fileMenu = self.menubar.addMenu('&File')
-        fileMenu.addAction(exitAction)
-        fileMenu.addAction(hideAction)
-        fileMenu.addAction(translateAction)
-
-        self.inputEdit.installEventFilter(self)
         self.show()
-
         dictionary_path = os.path.join(self.module_path, 'dictionary.txt')
         if os.path.exists(dictionary_path):
             with open(dictionary_path, "r", encoding='utf-8', newline='') as f:
@@ -120,10 +82,10 @@ class MainWindow(QMainWindow):
 
     def hide_or_show(self):
         if self.isHidden():
-            self.hide_or_show_action.setText('Hide')
+            self.actionHideOrShow.setText('Hide')
             self.show()
         else:
-            self.hide_or_show_action.setText('Show')
+            self.actionHideOrShow.setText('Show')
             self.hide()
 
     def eventFilter(self, QObject, QEvent):
@@ -154,14 +116,23 @@ class MainWindow(QMainWindow):
     def restore_translations(self):
         translations = self.history.current_word_translations
         if not translations:
-            for i in range(5):
-                self.text_edits[i].setText('')
+            self.set_translations([''] * 5)
             return
-        for i in range(5):
+
+        translations_list = []
+        for i in range(1, 6):
             if i in translations:
-                self.text_edits[i].setText(translations[i])
+                translations_list.append(translations[i])
             else:
-                self.text_edits[i].setText('')
+                translations_list.append('')
+        self.set_translations(translations_list)
+
+    def set_translations(self, translations: List[str]):
+        self.textEdit_1.setText(translations[0])
+        self.textEdit_2.setText(translations[1])
+        self.textEdit_3.setText(translations[2])
+        self.textEdit_4.setText(translations[3])
+        self.textEdit_5.setText(translations[4])
 
     @pyqtSlot()
     def translate(self):
@@ -179,12 +150,12 @@ class MainWindow(QMainWindow):
 
         if lang is 'en-ru':
             self.threads[4] = CustomThread(input_text, 'en-en', self.tr.definition)
-            self.threads[4].result.connect(self.TE_5_set_text)
+            self.threads[4].result.connect(self.TE_3_set_text)
             self.threads[4].finished.connect(self.threads[4].exit)
             self.threads[4].start()
 
         elif lang is 'ru-en':
-            self.text_edits[4].setText('')
+            self.textEdit_3.setText('')
 
         self.threads[0] = CustomThread(input_text, lang, self.tr.translate_google)
         self.threads[0].result.connect(self.TE_1_set_text)
@@ -197,12 +168,12 @@ class MainWindow(QMainWindow):
         self.threads[1].start()
 
         self.threads[2] = CustomThread(input_text, lang, self.tr.dictionary_yandex)
-        self.threads[2].result.connect(self.TE_3_set_text)
+        self.threads[2].result.connect(self.TE_4_set_text)
         self.threads[2].finished.connect(self.threads[2].exit)
         self.threads[2].start()
 
         self.threads[3] = CustomThread(input_text, lang, self.tr.translate_multitran)
-        self.threads[3].result.connect(self.TE_4_set_text)
+        self.threads[3].result.connect(self.TE_5_set_text)
         self.threads[3].finished.connect(self.threads[3].exit)
         self.threads[3].start()
 
@@ -216,33 +187,28 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str, str)
     def TE_1_set_text(self, translation, input_text):
-        output = 'Google Translate\n\n' + translation
-        self.text_edits[0].setText(output)
-        self.history.upload_word_translations(input_text, {0: output})
+        self.textEdit_1.setText(translation)
+        self.history.upload_word_translations(input_text, {1: translation})
 
     @pyqtSlot(str, str)
     def TE_2_set_text(self, translation, input_text):
-        output = 'Yandex Translate\n\n' + translation
-        self.text_edits[1].setText(output)
-        self.history.upload_word_translations(input_text, {1: output})
+        self.textEdit_2.setText(translation)
+        self.history.upload_word_translations(input_text, {2: translation})
 
     @pyqtSlot(str, str)
     def TE_3_set_text(self, translation, input_text):
-        output = 'Yandex Dictionary\n\n' + translation
-        self.text_edits[2].setText(output)
-        self.history.upload_word_translations(input_text, {2: output})
+        self.textEdit_3.setText(translation)
+        self.history.upload_word_translations(input_text, {3: translation})
 
     @pyqtSlot(str, str)
     def TE_4_set_text(self, translation, input_text):
-        output = 'Multitran Dictionary\n\n' + translation
-        self.text_edits[3].setText(output)
-        self.history.upload_word_translations(input_text, {3: output})
+        self.textEdit_4.setText(translation)
+        self.history.upload_word_translations(input_text, {4: translation})
 
     @pyqtSlot(str, str)
     def TE_5_set_text(self, translation, input_text):
-        output = "Definitions:\n" + translation
-        self.text_edits[4].setText(output)
-        self.history.upload_word_translations(input_text, {4: output})
+        self.textEdit_5.setText(translation)
+        self.history.upload_word_translations(input_text, {5: translation})
 
     def closeEvent(self, QCloseEvent):
         self.history.save_history()

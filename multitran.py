@@ -33,7 +33,7 @@ def processTable(table, links_on=False):
     def translations_row(word_index):
         if not tr.find_all('a'):  # REMOVE
             return '', word_index, []
-        _result = '\t\t' + tr.find_all('a')[0].text + "- "
+        _result = '\t' + tr.find_all('a')[0].text + "- "
         _words_list = []
         for a in tr.find_all('a')[1:]:
             if not 'i' in [i.name for i in a.children]:

@@ -91,18 +91,18 @@ class Translator:
     def dictionary_yandex(self, text, lang='en-ru'):
         url = r'https://dictionary.yandex.net/api/v1/dicservice.json/lookup'
         payload = dict(key=self.ya_dictionary_token, text=text, lang=lang, ui='ru')
-        response = dict(requests.get(url, payload).json())['def']
+        response = dict(requests.get(url, payload).json()).get('def')
+        if not response:
+            return ''
         result = ''
         for pos in response:
             if 'pos' in pos and 'text' in pos:
                 result = result + pos['pos'] + ' ' + pos['text'] + ' - '
-            i = 1
-            for variant in pos['tr']:
+            for i, variant in enumerate(pos['tr'], start=1):
                 tr_syn_list = []
                 en_syn_list = []
                 tr_syn_list.append(variant['text'])
                 result = result + '\n\t' + str(i) + '. '
-                i += 1
                 if 'syn' in variant:
                     for syn in variant['syn']:
                         tr_syn_list.append(syn['text'])
