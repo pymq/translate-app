@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (QMainWindow, QApplication, QAction,
 from requests.exceptions import ConnectionError
 
 import mainwindow
+from constants import LANGUAGES
 from history import History
 from translate import Translator
 
@@ -80,6 +81,18 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             completer.setCaseSensitivity(Qt.CaseInsensitive)
             self.inputEdit.setCompleter(completer)
 
+        self.swapLangsButton.pressed.connect(self.swap_languages)
+
+        for code, name in LANGUAGES.items():
+            self.fromComboBox.addItem(name, userData=code)
+            self.toComboBox.addItem(name, userData=code)
+
+    def swap_languages(self):
+        index1 = self.fromComboBox.currentIndex()
+        index2 = self.toComboBox.currentIndex()
+        self.fromComboBox.setCurrentIndex(index2)
+        self.toComboBox.setCurrentIndex(index1)
+
     def hide_or_show(self):
         if self.isHidden():
             self.actionHideOrShow.setText('Hide')
@@ -142,20 +155,20 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             return
         en_alp = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
                   'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-
-        if input_text[0] in en_alp or input_text[1] in en_alp:
-            lang = 'en-ru'
+        if self.autoDetectCheckBox.isChecked():
+            if input_text[0] in en_alp or input_text[1] in en_alp:
+                lang = 'en-ru'
+            else:
+                lang = 'ru-en'
         else:
-            lang = 'ru-en'
+            lang_from = self.fromComboBox.currentData()
+            lang_to = self.toComboBox.currentData()
+            lang = f'{lang_from}-{lang_to}'
 
-        if lang is 'en-ru':
-            self.threads[4] = CustomThread(input_text, 'en-en', self.tr.definition)
-            self.threads[4].result.connect(self.TE_3_set_text)
-            self.threads[4].finished.connect(self.threads[4].exit)
-            self.threads[4].start()
-
-        elif lang is 'ru-en':
-            self.textEdit_3.setText('')
+        self.threads[4] = CustomThread(input_text, lang, self.tr.definition)
+        self.threads[4].result.connect(self.TE_3_set_text)
+        self.threads[4].finished.connect(self.threads[4].exit)
+        self.threads[4].start()
 
         self.threads[0] = CustomThread(input_text, lang, self.tr.translate_google)
         self.threads[0].result.connect(self.TE_1_set_text)

@@ -52,7 +52,11 @@ class Translator:
         return response.text
 
     def translate_multitran(self, text, lang):
-        lang = 1  # TODO
+        # TODO
+        if lang == 'ru-en' or lang == 'en-ru':
+            lang = 1
+        else:
+            return ''
         return translate(text, lang)
 
     @staticmethod
@@ -71,7 +75,6 @@ class Translator:
 
     @staticmethod
     def definition(text, lang='en-en'):
-        # do not support russian
         src, dest = lang.split('-')
         response = voc.meaning(text, src, dest)
         if not response or response == '[]':
