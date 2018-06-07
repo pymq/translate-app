@@ -81,6 +81,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             completer.setCaseSensitivity(Qt.CaseInsensitive)
             self.inputEdit.setCompleter(completer)
 
+        self.swapLangsButton.setIcon(QIcon(os.path.join(self.module_path, 'arrowupdown.png')))
         self.swapLangsButton.pressed.connect(self.swap_languages)
 
         for code, name in LANGUAGES.items():
@@ -165,30 +166,18 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
             lang_to = self.toComboBox.currentData()
             lang = f'{lang_from}-{lang_to}'
 
-        self.threads[4] = CustomThread(input_text, lang, self.tr.definition)
-        self.threads[4].result.connect(self.TE_3_set_text)
-        self.threads[4].finished.connect(self.threads[4].exit)
-        self.threads[4].start()
-
-        self.threads[0] = CustomThread(input_text, lang, self.tr.translate_google)
-        self.threads[0].result.connect(self.TE_1_set_text)
-        self.threads[0].finished.connect(self.threads[0].exit)
-        self.threads[0].start()
-
-        self.threads[1] = CustomThread(input_text, lang, self.tr.translate_yandex)
-        self.threads[1].result.connect(self.TE_2_set_text)
-        self.threads[1].finished.connect(self.threads[1].exit)
-        self.threads[1].start()
-
-        self.threads[2] = CustomThread(input_text, lang, self.tr.dictionary_yandex)
-        self.threads[2].result.connect(self.TE_4_set_text)
-        self.threads[2].finished.connect(self.threads[2].exit)
-        self.threads[2].start()
-
-        self.threads[3] = CustomThread(input_text, lang, self.tr.translate_multitran)
-        self.threads[3].result.connect(self.TE_5_set_text)
-        self.threads[3].finished.connect(self.threads[3].exit)
-        self.threads[3].start()
+        lst = [
+            (self.tr.translate_google, self.textEdit_1, 1),
+            (self.tr.translate_yandex, self.textEdit_2, 2),
+            (self.tr.definition, self.textEdit_3, 3),
+            (self.tr.dictionary_yandex, self.textEdit_4, 4),
+            (self.tr.translate_multitran, self.textEdit_5, 5)
+        ]
+        for i, item in enumerate(lst):
+            self.threads[i] = CustomThread(input_text, lang, item[0])
+            self.threads[i].result.connect(self.set_text_decorator(item[1], item[2]))
+            self.threads[i].finished.connect(self.threads[i].exit)
+            self.threads[i].start()
 
         self.inputEdit.setText(input_text)
         self.input_edit_set_focus()
@@ -198,30 +187,13 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.inputEdit.selectAll()
         self.inputEdit.setFocus()
 
-    @pyqtSlot(str, str)
-    def TE_1_set_text(self, translation, input_text):
-        self.textEdit_1.setText(translation)
-        self.history.upload_word_translations(input_text, {1: translation})
+    def set_text_decorator(self, textedit, number):
+        @pyqtSlot(str, str)
+        def set_text(translation, input_text):
+            textedit.setText(translation)
+            self.history.upload_word_translations(input_text, {number: translation})
 
-    @pyqtSlot(str, str)
-    def TE_2_set_text(self, translation, input_text):
-        self.textEdit_2.setText(translation)
-        self.history.upload_word_translations(input_text, {2: translation})
-
-    @pyqtSlot(str, str)
-    def TE_3_set_text(self, translation, input_text):
-        self.textEdit_3.setText(translation)
-        self.history.upload_word_translations(input_text, {3: translation})
-
-    @pyqtSlot(str, str)
-    def TE_4_set_text(self, translation, input_text):
-        self.textEdit_4.setText(translation)
-        self.history.upload_word_translations(input_text, {4: translation})
-
-    @pyqtSlot(str, str)
-    def TE_5_set_text(self, translation, input_text):
-        self.textEdit_5.setText(translation)
-        self.history.upload_word_translations(input_text, {5: translation})
+        return set_text
 
     def closeEvent(self, QCloseEvent):
         self.history.save_history()

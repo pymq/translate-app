@@ -82,8 +82,7 @@ class Translator:
         response = json.loads(response)
         output = ""
         for i, a in enumerate(response, start=1):
-            output += '\t' + str(i) + '. ' + a['text']
-            output += '\n'
+            output += str(i) + '. ' + a['text'] + '\n'
         return output
 
     def translate_yandex(self, text, lang='en-ru'):
