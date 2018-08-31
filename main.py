@@ -161,6 +161,12 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
                 lang = 'en-ru'
             else:
                 lang = 'ru-en'
+            src, dest = lang.split('-')
+            from_index = self.fromComboBox.findData(src)
+            to_index = self.fromComboBox.findData(dest)
+            self.fromComboBox.setCurrentIndex(from_index)
+            self.toComboBox.setCurrentIndex(to_index)
+
         else:
             lang_from = self.fromComboBox.currentData()
             lang_to = self.toComboBox.currentData()
